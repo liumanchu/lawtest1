@@ -79,6 +79,26 @@
     --chip-on: linear-gradient(180deg,#ffe15a,#ffd23f);
   }
 
+  /* ---- WEB / SPIDER THEME ---- */
+  [data-theme="web"]{
+    --bg1:#1a2247; --bg2:#2a1030; --bg3:#0a0e20;
+    --panel: rgba(18,24,52,.72);
+    --panel-brd:#ff3b52;
+    --panel-glow: 0 0 18px rgba(255,59,82,.45), inset 0 0 16px rgba(255,59,82,.10);
+    --text:#eef1ff; --muted:#98a1c8;
+    --accent:#ff3b52;
+    --p1:#ff3b52; --p1-glow:#ff2d55;      /* Scarlet spider - red */
+    --p2:#4a90e2; --p2-glow:#2f7fe0;      /* Cobalt spider - blue */
+    --grid-line: rgba(200,214,255,.22);
+    --cell-bg: rgba(9,13,30,.5);
+    --btn-bg: linear-gradient(180deg,#ff4d63,#e01e3c);
+    --btn-brd:#ffd0d7;
+    --win-line:#ffffff;
+    --title-font:'Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;
+    --chip-bg: rgba(12,16,36,.6);
+    --chip-on: linear-gradient(180deg,#ff4d63,#e01e3c);
+  }
+
   /* ============================================================
      BASE
      ============================================================ */
@@ -151,12 +171,12 @@
   /* ============================================================
      THEME PICKER
      ============================================================ */
-  .theme-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .theme-row{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .theme-card{
     border-radius:14px; padding:10px 6px; cursor:pointer; text-align:center;
     border:2px solid transparent; position:relative; overflow:hidden;
     transition: transform .18s var(--ease), border-color .2s;
-    font-weight:800; font-size:13.5px;
+    font-weight:800; font-size:14px;
   }
   .theme-card .prev{ height:40px; border-radius:10px; margin-bottom:7px; display:flex; align-items:center; justify-content:center; gap:5px; font-size:19px; }
   .theme-card.neon{ background:#1a0636; color:#fff; }
@@ -165,6 +185,8 @@
   .theme-card.kawaii .prev{ background: linear-gradient(145deg,#ffe1ef,#efe3ff); }
   .theme-card.hero{ background:#fff7db; color:#c1121f; }
   .theme-card.hero .prev{ background: repeating-linear-gradient(45deg,#ffe36b,#ffe36b 6px,#ffd23f 6px,#ffd23f 12px); }
+  .theme-card.web{ background:#141a35; color:#ff6274; }
+  .theme-card.web .prev{ background: radial-gradient(circle at 50% 45%, #2a2f5c, #0c1024); }
   .theme-card[aria-checked="true"]{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 0 16px var(--accent); }
   .theme-card .o{ color:#ff5b6a; text-shadow:0 0 8px #ff2d55; font-weight:900;}
   .theme-card .x{ color:#57c8ff; text-shadow:0 0 8px #2f9bff; font-weight:900;}
@@ -362,6 +384,35 @@
   [data-theme="hero"] .winline line{ stroke-width:5.5; filter: drop-shadow(0 0 1.5px #111318) drop-shadow(0 0 1.5px #111318) drop-shadow(0 0 4px rgba(255,210,63,.9)); }
 
   /* ============================================================
+     WEB / SPIDER THEME OVERRIDES
+     ============================================================ */
+  [data-theme="web"] body{
+    background:
+      radial-gradient(circle at 50% 34%, rgba(255,59,82,.10), transparent 46%),
+      repeating-radial-gradient(circle at 50% 30%, transparent 0 27px, rgba(210,224,255,.05) 27px 28px),
+      repeating-conic-gradient(from 0deg at 50% 30%, rgba(210,224,255,.05) 0deg .5deg, transparent .5deg 15deg),
+      linear-gradient(180deg,#161d40,#0a0e20 70%);
+  }
+  [data-theme="web"] h1{ color:#ff3b52; -webkit-text-stroke:2px #0a0e20; text-shadow:0 0 12px rgba(255,59,82,.6), 3px 3px 0 rgba(0,0,0,.4); letter-spacing:1px; }
+  [data-theme="web"] .panel{ backdrop-filter: blur(6px); }
+  [data-theme="web"] .btn{ box-shadow:0 0 16px rgba(255,59,82,.5); }
+  [data-theme="web"] .win-card h2{ color:#fff; text-shadow:0 0 12px var(--accent); }
+  [data-theme="web"] .winline line{ stroke-width:5; filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 7px rgba(255,59,82,.9)); }
+
+  /* spider-webs all over (corners) */
+  .webs{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; display:none; color:rgba(210,222,255,.42); }
+  [data-theme="web"] .webs{ display:block; }
+  .webs .wc{ position:absolute; width:min(38vw,190px); height:min(38vw,190px); }
+  .webs .wc svg{ width:100%; height:100%; display:block; filter: drop-shadow(0 0 3px rgba(120,150,255,.3)); }
+  .webs .tl{ top:0; left:0; }
+  .webs .tr{ top:0; right:0; transform:scaleX(-1); }
+  .webs .bl{ bottom:0; left:0; transform:scaleY(-1); }
+  .webs .br{ bottom:0; right:0; transform:scale(-1,-1); }
+  /* a lone dangling spider */
+  .webs .drop{ position:absolute; top:0; left:22%; width:2px; height:34vh; background:linear-gradient(rgba(210,222,255,.5),rgba(210,222,255,0)); }
+  .webs .drop::after{ content:"🕷"; position:absolute; bottom:-6px; left:-9px; font-size:20px; filter:drop-shadow(0 0 4px rgba(255,59,82,.5)); }
+
+  /* ============================================================
      VICTORY CINEMATIC (Hero theme)
      ============================================================ */
   .cinema{ position:fixed; inset:0; z-index:70; display:none; overflow:hidden; pointer-events:none; }
@@ -402,6 +453,16 @@
     -webkit-text-stroke:2px #111318; color:#fff; font-size:min(9vmin,54px); letter-spacing:1px;
     text-transform:uppercase; transform:rotate(-6deg); text-shadow:3px 3px 0 rgba(17,19,24,.4); }
   @keyframes cburst{ 0%{transform:translate(-50%,-50%) scale(0) rotate(-16deg);} 70%{transform:translate(-50%,-50%) scale(1.15) rotate(5deg);} 100%{transform:translate(-50%,-50%) scale(1) rotate(-3deg);} }
+  /* web-theme cinematic: giant web splat behind the slinger + THWIP word */
+  .cinema .websplat{ position:absolute; left:50%; top:50%; width:min(150vmax,1200px); height:min(150vmax,1200px);
+    transform:translate(-50%,-50%) scale(0); opacity:0; animation: websplat .6s .5s ease-out forwards; }
+  .cinema .websplat svg{ width:100%; height:100%; display:block; }
+  @keyframes websplat{ 0%{transform:translate(-50%,-50%) scale(0); opacity:0;} 55%{opacity:.9;} 100%{transform:translate(-50%,-50%) scale(1); opacity:.7;} }
+  .cinema .cword{ position:absolute; left:50%; top:20%; transform:translate(-50%,-50%) scale(0) rotate(-8deg);
+    font-family:'Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;
+    -webkit-text-stroke:2px #0a0e20; color:#ff3b52; font-size:min(11vmin,64px); letter-spacing:1px;
+    text-transform:uppercase; text-shadow:0 0 14px rgba(255,59,82,.6), 3px 3px 0 rgba(0,0,0,.4);
+    animation: cburst .55s .62s var(--ease) forwards; white-space:nowrap; }
   @media (prefers-reduced-motion: reduce){
     .cinema .flyhero{ animation-duration:.5s; }
     .cinema .rays{ display:none; }
@@ -415,6 +476,7 @@
 </head>
 <body data-theme="neon">
   <div class="bg-deco" id="bgDeco"></div>
+  <div class="webs" id="webs"></div>
 
   <div class="wrap">
     <!-- ==================== SETUP SCREEN ==================== -->
@@ -438,6 +500,10 @@
           <div class="theme-card hero" data-t="hero" role="checkbox" aria-checked="false">
             <div class="prev"><span class="hs">★</span><span class="hb">⚡</span></div>
             Hero
+          </div>
+          <div class="theme-card web" data-t="web" role="checkbox" aria-checked="false">
+            <div class="prev">🕸️🕷️</div>
+            Spider
           </div>
         </div>
 
@@ -684,14 +750,104 @@
       '</svg>';
   }
 
+  // Spider emblem badges (board marks) for the Web theme
+  function spiderMark(p1){
+    var col=p1?'#ff3b52':'#4a90e2', web=p1?'rgba(255,90,110,.4)':'rgba(110,165,240,.4)';
+    return '<div class="mark"><svg viewBox="0 0 100 100">'+
+      '<circle cx="50" cy="50" r="36" fill="#0d1230" stroke="'+col+'" stroke-width="5"/>'+
+      '<g stroke="'+web+'" stroke-width="1.3" fill="none">'+
+        '<line x1="50" y1="14" x2="50" y2="86"/><line x1="14" y1="50" x2="86" y2="50"/>'+
+        '<line x1="25" y1="25" x2="75" y2="75"/><line x1="75" y1="25" x2="25" y2="75"/>'+
+        '<circle cx="50" cy="50" r="13"/><circle cx="50" cy="50" r="25"/></g>'+
+      '<g stroke="'+col+'" stroke-width="2.6" fill="none" stroke-linecap="round">'+
+        '<path d="M44 46 C34 40 30 40 24 33"/><path d="M44 50 C33 48 27 50 21 47"/>'+
+        '<path d="M44 54 C33 56 28 61 23 66"/><path d="M45 58 C38 65 35 71 31 78"/>'+
+        '<path d="M56 46 C66 40 70 40 76 33"/><path d="M56 50 C67 48 73 50 79 47"/>'+
+        '<path d="M56 54 C67 56 72 61 77 66"/><path d="M55 58 C62 65 65 71 69 78"/></g>'+
+      '<ellipse cx="50" cy="57" rx="7.5" ry="10.5" fill="'+col+'"/>'+
+      '<ellipse cx="50" cy="45" rx="5.5" ry="6.5" fill="'+col+'"/>'+
+      '</svg></div>';
+  }
+  // Masked web-slinger figure (win cinematic + overlay icon)
+  function webHero(player){
+    var p1=player===1;
+    var suit=p1?'#e0233b':'#2f6fd0', suitD=p1?'#9c1327':'#1c4a93', web='#0a1024', glove=p1?'#8f0d1c':'#123566';
+    return '<div class="mark"><svg viewBox="0 0 120 152">'+
+      // web strand he swings from (out of the raised fist)
+      '<path d="M93 40 L96 22 L90 10 L98 0" fill="none" stroke="rgba(230,238,255,.8)" stroke-width="2"/>'+
+      // legs + boots
+      '<rect x="48" y="103" width="11" height="31" rx="5" fill="'+suitD+'" stroke="#0a1024" stroke-width="3"/>'+
+      '<rect x="61" y="103" width="11" height="31" rx="5" fill="'+suitD+'" stroke="#0a1024" stroke-width="3"/>'+
+      '<path d="M45 128 h16 v9 a4 4 0 0 1 -4 4 h-8 a4 4 0 0 1 -4 -4 z" fill="'+suitD+'" stroke="#0a1024" stroke-width="3"/>'+
+      '<path d="M59 128 h16 v9 a4 4 0 0 1 -4 4 h-8 a4 4 0 0 1 -4 -4 z" fill="'+suitD+'" stroke="#0a1024" stroke-width="3"/>'+
+      // torso
+      '<path d="M44 75 Q60 66 76 75 L72 107 Q60 113 48 107 Z" fill="'+suit+'" stroke="#0a1024" stroke-width="3.5" stroke-linejoin="round"/>'+
+      // web lines on torso + spider emblem
+      '<g stroke="'+web+'" stroke-width="1.3" fill="none" opacity=".8">'+
+        '<line x1="60" y1="70" x2="60" y2="110"/><line x1="47" y1="76" x2="73" y2="76"/>'+
+        '<line x1="46" y1="86" x2="74" y2="86"/><line x1="48" y1="97" x2="72" y2="97"/>'+
+        '<path d="M50 72 L70 108 M70 72 L50 108"/></g>'+
+      '<ellipse cx="60" cy="90" rx="3.6" ry="5" fill="#0a1024"/><ellipse cx="60" cy="83" rx="2.6" ry="3" fill="#0a1024"/>'+
+      // left arm down (web-shooter hand)
+      '<path d="M47 79 Q33 88 31 102" fill="none" stroke="'+suit+'" stroke-width="10.5" stroke-linecap="round"/>'+
+      '<circle cx="31" cy="104" r="8" fill="'+glove+'" stroke="#0a1024" stroke-width="3"/>'+
+      // right arm raised (holding web)
+      '<path d="M73 77 Q89 66 92 44" fill="none" stroke="'+suit+'" stroke-width="10.5" stroke-linecap="round"/>'+
+      '<circle cx="93" cy="40" r="9" fill="'+glove+'" stroke="#0a1024" stroke-width="3"/>'+
+      // full mask head
+      '<circle cx="60" cy="48" r="20" fill="'+suit+'" stroke="#0a1024" stroke-width="3"/>'+
+      '<g stroke="'+web+'" stroke-width="1" fill="none" opacity=".7">'+
+        '<line x1="60" y1="30" x2="60" y2="66"/><line x1="42" y1="48" x2="78" y2="48"/>'+
+        '<path d="M46 38 Q60 44 74 38 M46 58 Q60 52 74 58"/></g>'+
+      // big spider lenses
+      '<path d="M46 46 Q54 40 58 50 Q52 56 46 52 Z" fill="#fff" stroke="#0a1024" stroke-width="2"/>'+
+      '<path d="M74 46 Q66 40 62 50 Q68 56 74 52 Z" fill="#fff" stroke="#0a1024" stroke-width="2"/>'+
+      '</svg></div>';
+  }
+  // corner spider web (anchored at 0,0); slight inward sag on the rings
+  function webCorner(){
+    var R=200, rings=[46,86,128,176], angs=[0,15,32,50,68,85,90];
+    function pt(r,a){ var rad=a*Math.PI/180; return [(r*Math.cos(rad)).toFixed(1),(r*Math.sin(rad)).toFixed(1)]; }
+    var s='';
+    for(var i=0;i<angs.length;i++){ var e=pt(R,angs[i]); s+='<line x1="0" y1="0" x2="'+e[0]+'" y2="'+e[1]+'"/>'; }
+    for(var k=0;k<rings.length;k++){ var r=rings[k], d='M'+pt(r,angs[0]).join(' ');
+      for(var j=1;j<angs.length;j++){ var a=pt(r,angs[j-1]), b=pt(r,angs[j]);
+        var cx=((+a[0]+ +b[0])/2*0.8).toFixed(1), cy=((+a[1]+ +b[1])/2*0.8).toFixed(1);
+        d+=' Q'+cx+' '+cy+' '+b[0]+' '+b[1]; }
+      s+='<path d="'+d+'"/>'; }
+    return '<svg viewBox="0 0 '+R+' '+R+'"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">'+s+'</g></svg>';
+  }
+  function buildWebs(){
+    var w=$('webs'); if(!w) return;
+    if(S.theme!=='web'){ w.innerHTML=''; return; }
+    var svg=webCorner();
+    w.innerHTML='<div class="wc tl">'+svg+'</div><div class="wc tr">'+svg+'</div>'+
+                '<div class="wc bl">'+svg+'</div><div class="wc br">'+svg+'</div>'+
+                '<div class="drop"></div>';
+  }
+  // full spider web splat (cinematic backdrop for the web theme)
+  function webSplatSVG(){
+    var R=200, rings=[30,58,88,120,155,192], n=16, s='';
+    for(var i=0;i<n;i++){ var a=(i/n)*2*Math.PI, x=(100+Math.cos(a)*R).toFixed(1), y=(100+Math.sin(a)*R).toFixed(1); s+='<line x1="100" y1="100" x2="'+x+'" y2="'+y+'"/>'; }
+    for(var k=0;k<rings.length;k++){ var r=rings[k], d='';
+      for(var j=0;j<=n;j++){ var a2=(j/n)*2*Math.PI, px=(100+Math.cos(a2)*r).toFixed(1), py=(100+Math.sin(a2)*r).toFixed(1);
+        if(j===0){ d='M'+px+' '+py; } else {
+          var pa=((j-0.5)/n)*2*Math.PI, cx=(100+Math.cos(pa)*r*0.86).toFixed(1), cy=(100+Math.sin(pa)*r*0.86).toFixed(1);
+          d+=' Q'+cx+' '+cy+' '+px+' '+py; } }
+      s+='<path d="'+d+'"/>'; }
+    return '<svg viewBox="0 0 200 200"><g fill="none" stroke="rgba(235,242,255,.85)" stroke-width="1.4" stroke-linecap="round">'+s+'</g></svg>';
+  }
+
   function markHTML(player){
     if(S.theme==='neon') return player===1?neonO():neonX();
     if(S.theme==='hero') return player===1?heroStar():heroBolt();
+    if(S.theme==='web') return player===1?spiderMark(true):spiderMark(false);
     return player===1?kitty():bunny();
   }
   function playerName(player){
     if(S.theme==='kawaii') return player===1?'Kitty':'Bunny';
     if(S.theme==='hero') return player===1?'Star':'Bolt';
+    if(S.theme==='web') return player===1?'Scarlet':'Cobalt';
     return 'Player '+player;
   }
 
@@ -701,20 +857,22 @@
   function applyTheme(){
     document.body.setAttribute('data-theme', S.theme);
     var mtc=document.querySelector('meta[name=theme-color]');
-    if(mtc){ mtc.setAttribute('content', S.theme==='neon'?'#1b0736':(S.theme==='hero'?'#ffe9a8':'#ffe3f1')); }
-    $('setupTitle').textContent = S.theme==='kawaii' ? 'Tic-Tac-Cute' : (S.theme==='hero' ? 'Tic-Tac-Hero!' : 'Tic-Tac-Toe');
+    if(mtc){ mtc.setAttribute('content', S.theme==='neon'?'#1b0736':(S.theme==='hero'?'#ffe9a8':(S.theme==='web'?'#0d1230':'#ffe3f1'))); }
+    $('setupTitle').textContent = S.theme==='kawaii' ? 'Tic-Tac-Cute' : (S.theme==='hero' ? 'Tic-Tac-Hero!' : (S.theme==='web' ? 'Tic-Tac-Web!' : 'Tic-Tac-Toe'));
     // theme cards
     document.querySelectorAll('#themeRow .theme-card').forEach(function(c){
       c.setAttribute('aria-checked', c.dataset.t===S.theme?'true':'false');
     });
     $('soundBtn').textContent = S.sound?'🔊':'🔇';
     buildDeco();
+    buildWebs();
     refreshPlayers();
   }
   function buildDeco(){
     var d=$('bgDeco'); d.innerHTML='';
     var set = S.theme==='kawaii' ? ['🌸','💗','⭐','🐱','🐰','🍓','✨','🎀']
       : S.theme==='hero' ? ['★','⚡','✦','💥','●','★','⚡']
+      : S.theme==='web' ? ['🕸','🕷','✦','🕸','🕷','•']
       : ['✦','◇','✧','•','◯','✕'];
     var n = 12;
     for(var i=0;i<n;i++){
@@ -853,7 +1011,7 @@
       drawWinLine(cells);
     }
     winMelody(); vibrate([30,25,30,25,60]);
-    if(S.theme==='hero'){
+    if(S.theme==='hero' || S.theme==='web'){
       playHeroCinema(winner);
       setTimeout(confetti, 620);   // burst as the hero lands the pose
       setTimeout(function(){ showOverlay(winner, cells); }, 1950);
@@ -863,19 +1021,25 @@
     }
   }
 
-  // Victory cinematic: the winning hero flies up toward you and strikes a pose
+  // Victory cinematic: the winning hero flies/swings up toward you and strikes a pose
   var cinemaTimer=null;
   function playHeroCinema(winner){
     var host=$('cinema'); if(!host) return;
-    var words=['KA-POW!','BOOM!','VICTORY!','ZAP!','WHAM!','KABOOM!'];
+    var isWeb = S.theme==='web';
+    var words = isWeb ? ['THWIP!','GOTCHA!','WEB SLAM!','BULLSEYE!','SNAP!']
+                      : ['KA-POW!','BOOM!','VICTORY!','ZAP!','WHAM!','KABOOM!'];
     var word=words[Math.floor(Math.random()*words.length)];
+    var figure = isWeb ? webHero(winner) : heroFigure(winner);
+    var burst  = isWeb ? '<div class="websplat">'+webSplatSVG()+'</div>'
+                       : '<div class="cburst">'+starburstSVG(winner)+'<div class="word">'+word+'</div></div>';
+    var wordEl = isWeb ? '<div class="cword">'+word+'</div>' : '';
     host.innerHTML =
       '<div class="backdrop"></div>'+
       '<div class="rays"></div>'+
       '<div class="flash"></div>'+
       '<div class="shock"></div>'+
-      '<div class="cburst">'+starburstSVG(winner)+'<div class="word">'+word+'</div></div>'+
-      '<div class="flyhero">'+heroFigure(winner)+'</div>';
+      burst + wordEl +
+      '<div class="flyhero">'+figure+'</div>';
     host.classList.add('active');
     if(cinemaTimer) clearTimeout(cinemaTimer);
     cinemaTimer=setTimeout(function(){ host.classList.remove('active'); host.innerHTML=''; }, 2000);
@@ -941,14 +1105,15 @@
     if(winner===0){
       $('winIcon').innerHTML = S.theme==='kawaii' ? '<div class="mark"><svg viewBox="0 0 100 100"><text x="50" y="70" font-size="60" text-anchor="middle">🤝</text></svg></div>' : '<div class="mark"><svg viewBox="0 0 100 100"><text x="50" y="70" font-size="55" text-anchor="middle">🤝</text></svg></div>';
       $('winTitle').textContent = "It's a draw!";
-      $('winSub').textContent = 'So close — run it back? '+(S.theme==='kawaii'?'🌸':'⚡');
+      $('winSub').textContent = 'So close — run it back? '+(S.theme==='kawaii'?'🌸':(S.theme==='web'?'🕸':'⚡'));
     }else{
       var wic=$('winIcon');
-      wic.innerHTML = S.theme==='hero' ? heroFigure(winner) : markHTML(winner);
-      wic.style.height = S.theme==='hero' ? '116px' : '88px';
-      wic.style.width  = S.theme==='hero' ? '96px'  : '88px';
+      var figTheme = (S.theme==='hero'||S.theme==='web');
+      wic.innerHTML = S.theme==='hero' ? heroFigure(winner) : (S.theme==='web' ? webHero(winner) : markHTML(winner));
+      wic.style.height = figTheme ? '116px' : '88px';
+      wic.style.width  = figTheme ? '96px'  : '88px';
       $('winTitle').textContent = playerName(winner)+' wins!';
-      $('winSub').textContent = (cells?cells.length:S.connect)+' in a row '+(S.theme==='kawaii'?'🎀✨':(S.theme==='hero'?'💥⭐':'🎉'));
+      $('winSub').textContent = (cells?cells.length:S.connect)+' in a row '+(S.theme==='kawaii'?'🎀✨':(S.theme==='hero'?'💥⭐':(S.theme==='web'?'🕸🕷':'🎉')));
     }
     $('overlay').classList.add('active');
   }
@@ -1028,6 +1193,7 @@
   }
   function winMelody(){
     if(S.theme==='hero'){ [392,523,659,784,1046].forEach(function(f,i){ tone(f,0.2,'sawtooth',0.14,i*0.1); }); return; }
+    if(S.theme==='web'){ [523,392,659,880,1174].forEach(function(f,i){ tone(f,0.16,'square',0.12,i*0.09); }); return; }
     var base = S.theme==='kawaii'?[660,784,880,1046]:[440,587,740,880];
     base.forEach(function(f,i){ tone(f,0.16,undefined,0.16,i*0.11); });
   }
@@ -1042,6 +1208,8 @@
       ? ['#ff8dc0','#ffd1e6','#8ec5ff','#ffe08a','#c4a6ff','#a6f0d0']
       : S.theme==='hero'
       ? ['#e5322b','#1f6fd0','#ffd23f','#ffffff','#ff6b3d','#151a30']
+      : S.theme==='web'
+      ? ['#ff3b52','#4a90e2','#ffffff','#d8e0ff','#0d1230','#ff6274']
       : ['#ff5b6a','#57c8ff','#c65cff','#ffffff','#ffd24d','#7dff9e'];
     for(var i=0;i<70;i++){
       (function(i){
@@ -1075,7 +1243,7 @@
       S.sound=!S.sound; $('soundBtn').textContent=S.sound?'🔊':'🔇'; savePrefs(); if(S.sound) blip(1);
     });
     $('themeBtn').addEventListener('click', function(){
-      var order=['neon','kawaii','hero'];
+      var order=['neon','kawaii','hero','web'];
       S.theme = order[(order.indexOf(S.theme)+1)%order.length];
       applyTheme(); savePrefs();
       // re-render existing marks in new style
