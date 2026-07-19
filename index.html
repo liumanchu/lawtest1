@@ -328,6 +328,22 @@
   .score .s.p2 b{ color:var(--p2); }
 
   /* ============================================================
+     SIGNATURE POWERS
+     ============================================================ */
+  .pcard .ppip{ margin-top:3px; font-size:12px; line-height:1; height:14px; min-height:14px; filter:drop-shadow(0 0 4px var(--accent)); transition:opacity .2s; }
+  .pcard .ppip.used{ opacity:.22; filter:grayscale(1); }
+  .icon-btn.power.ready{ border-color:var(--accent); animation: pwpulse 1.2s ease infinite; }
+  @keyframes pwpulse{ 0%,100%{ box-shadow:0 0 0 rgba(0,0,0,0);} 50%{ box-shadow:0 0 15px var(--accent);} }
+  .icon-btn.power.arming{ border-color:var(--accent); background:var(--chip-on); color:#fff; }
+  .icon-btn.power.used{ opacity:.4; }
+  .cell.targetable{ cursor:pointer; animation: tgt 1s ease infinite; border-radius:6px; z-index:2; }
+  @keyframes tgt{ 0%,100%{ box-shadow: inset 0 0 0 2px var(--accent), 0 0 6px var(--accent);} 50%{ box-shadow: inset 0 0 0 3px var(--accent), 0 0 16px var(--accent);} }
+  .cell.smashing .mark{ animation: smash .26s ease forwards; }
+  @keyframes smash{ to{ transform:scale(1.7) rotate(22deg); opacity:0; } }
+  .cellburst{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:34px; pointer-events:none; z-index:6; animation: cbst .6s ease forwards; }
+  @keyframes cbst{ 0%{ transform:scale(.3); opacity:0;} 30%{ transform:scale(1.2); opacity:1;} 100%{ transform:scale(1.55); opacity:0;} }
+
+  /* ============================================================
      WIN OVERLAY
      ============================================================ */
   .overlay{ position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:20px;
@@ -537,6 +553,15 @@
           </div>
         </div>
 
+        <div class="field">
+          <div class="label">🦸 Signature powers</div>
+          <div class="seg" id="powerSeg">
+            <div class="chip" data-power="on" aria-pressed="true">On</div>
+            <div class="chip" data-power="off" aria-pressed="false">Off</div>
+          </div>
+          <div class="hint" id="powerHint">Each player gets one special move per game</div>
+        </div>
+
         <button class="btn big" id="startBtn">▶  Start Game</button>
       </div>
       <p class="footer">Tip: play on one phone and pass it back &amp; forth 📱</p>
@@ -557,11 +582,13 @@
         <div class="pcard p1 turn" id="pcard1">
           <div class="picon" id="picon1"></div>
           <div class="pname" id="pname1">Player 1</div>
+          <div class="ppip" id="ppip1"></div>
         </div>
         <div class="vs">VS</div>
         <div class="pcard p2" id="pcard2">
           <div class="picon" id="picon2"></div>
           <div class="pname" id="pname2">Player 2</div>
+          <div class="ppip" id="ppip2"></div>
         </div>
       </div>
 
@@ -577,6 +604,7 @@
 
       <div class="controls">
         <button class="icon-btn" id="undoBtn">↩ <span>Undo</span></button>
+        <button class="icon-btn power" id="powerBtn">⚡ <span>Power</span></button>
         <button class="icon-btn" id="restartBtn">⟳ <span>Restart</span></button>
       </div>
 
@@ -614,9 +642,21 @@
     theme:'neon', size:3, connect:3,
     B:[], turn:1, moves:[], over:false,
     scores:{p1:0,p2:0,d:0},
-    sound:true
+    sound:true,
+    powersOn:true,
+    powerAvail:{1:true,2:true},  // signature-move charge per player
+    placesLeft:1,                // placements remaining this turn (Overclock = 2)
+    powerMode:null,              // null | 'smash' | 'convert' | 'yank'
+    yankFrom:-1
   };
   var DIRS=[[0,1],[1,0],[1,1],[1,-1]];
+  // Signature move per theme
+  var POWERS = {
+    neon:   { name:'Overclock',   icon:'⚡', type:'double',  hint:'place two marks in one turn' },
+    kawaii: { name:'Befriend',    icon:'💗', type:'convert', hint:'turn a rival mark into yours' },
+    hero:   { name:'Power Smash', icon:'💥', type:'smash',   hint:'KO a rival mark off the board' },
+    web:    { name:'Web Yank',    icon:'🕸', type:'yank',    hint:'sling a rival mark to an empty neighbor' }
+  };
   var $ = function(id){ return document.getElementById(id); };
 
   /* load saved prefs */
@@ -626,10 +666,11 @@
     if(saved.size) S.size=saved.size;
     if(saved.connect) S.connect=saved.connect;
     if(typeof saved.sound==='boolean') S.sound=saved.sound;
+    if(typeof saved.powersOn==='boolean') S.powersOn=saved.powersOn;
   }catch(e){}
 
   function savePrefs(){
-    try{ localStorage.setItem('ttt-prefs', JSON.stringify({theme:S.theme,size:S.size,connect:S.connect,sound:S.sound})); }catch(e){}
+    try{ localStorage.setItem('ttt-prefs', JSON.stringify({theme:S.theme,size:S.size,connect:S.connect,sound:S.sound,powersOn:S.powersOn})); }catch(e){}
   }
 
   /* =========================================================
@@ -864,6 +905,8 @@
       c.setAttribute('aria-checked', c.dataset.t===S.theme?'true':'false');
     });
     $('soundBtn').textContent = S.sound?'🔊':'🔇';
+    var pw=POWERS[S.theme];
+    if($('powerHint')) $('powerHint').textContent = pw ? (pw.icon+' '+pw.name+' — '+pw.hint) : 'Each player gets one special move per game';
     buildDeco();
     buildWebs();
     refreshPlayers();
@@ -905,6 +948,9 @@
     });
     var names = S.size===3&&S.connect===3?'Classic mode · ':'';
     $('modeHint').textContent = names+'get '+S.connect+' in a row on a '+S.size+'×'+S.size+' grid';
+    document.querySelectorAll('#powerSeg .chip').forEach(function(c){
+      c.setAttribute('aria-pressed', ((c.dataset.power==='on')===S.powersOn)?'true':'false');
+    });
   }
 
   function bindSetup(){
@@ -923,6 +969,9 @@
         refreshSetupControls(); savePrefs(); blip(2);
       });
     });
+    document.querySelectorAll('#powerSeg .chip').forEach(function(c){
+      c.addEventListener('click', function(){ S.powersOn=(c.dataset.power==='on'); refreshSetupControls(); savePrefs(); blip(1); });
+    });
     $('startBtn').addEventListener('click', function(){ startGame(); });
   }
 
@@ -933,6 +982,7 @@
     S.B = new Array(S.size*S.size).fill(0);
     S.turn=1; S.moves=[]; S.over=false;
     S.scores={p1:0,p2:0,d:0};   // fresh match when starting from the menu
+    S.powerAvail={1:true,2:true}; S.placesLeft=1; S.powerMode=null; S.yankFrom=-1;
     show('game');
     buildBoard();
     $('modeName').textContent = 'Connect '+S.connect+' · '+S.size+'×'+S.size;
@@ -965,10 +1015,15 @@
   function onCell(e){
     if(S.over) return;
     var i=+e.currentTarget.dataset.i;
+    if(S.powerMode){ handlePowerTap(i); return; }
     if(S.B[i]) return;
+    placeAt(i);
+  }
+
+  function placeAt(i){
     var p=S.turn;
     S.B[i]=p; S.moves.push(i);
-    var cell=e.currentTarget;
+    var cell=$('board').children[i];
     cell.innerHTML=markHTML(p);
     cell.classList.add('pop');
     blip(p); vibrate(12);
@@ -976,8 +1031,139 @@
     var line=winLine(i);
     if(line){ return endGame(p, line); }
     if(S.moves.length===S.B.length){ return endGame(0, null); } // draw
+    S.placesLeft--;
+    if(S.placesLeft>0){ updatePowerUI(); setPrompt('⚡ '+playerName(p)+' — place 1 more!'); return; } // Overclock
+    S.placesLeft=1;
     S.turn = p===1?2:1;
     refreshTurn();
+  }
+
+  /* =========================================================
+     SIGNATURE POWERS
+     ========================================================= */
+  function otherP(p){ return p===1?2:1; }
+  function adjacentEmpties(i){
+    var r=Math.floor(i/S.size), c=i%S.size, res=[];
+    for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+      if(!dr&&!dc) continue;
+      var rr=r+dr, cc=c+dc;
+      if(inb(rr,cc) && !S.B[rr*S.size+cc]) res.push(rr*S.size+cc);
+    }
+    return res;
+  }
+  function enemyMarkCells(){ var e=otherP(S.turn), a=[]; for(var i=0;i<S.B.length;i++) if(S.B[i]===e) a.push(i); return a; }
+  function hasValidTarget(type){
+    var cells=enemyMarkCells();
+    if(type!=='yank') return cells.length>0;
+    return cells.some(function(i){ return adjacentEmpties(i).length>0; });
+  }
+  function setPrompt(t){ $('turnLine').textContent=t; }
+  function clearTargets(){ Array.prototype.forEach.call($('board').children,function(c){ c.classList.remove('targetable'); }); }
+  function markTargets(idxs){ clearTargets(); idxs.forEach(function(i){ var c=$('board').children[i]; if(c) c.classList.add('targetable'); }); }
+
+  function activatePower(){
+    var cur=S.turn, pw=POWERS[S.theme];
+    if(!S.powersOn || S.over || !pw) return;
+    if(S.powerMode){ cancelPower(); return; }        // toggle targeting off
+    if(!S.powerAvail[cur]) return;
+    if(pw.type==='double'){
+      S.powerAvail[cur]=false; S.placesLeft=2;
+      updatePowerUI(); setPrompt(pw.icon+' Overclock! Place 2 marks'); vibrate(14); blip(1);
+      return;
+    }
+    if(!hasValidTarget(pw.type)){ setPrompt('No rival mark to '+pw.name.toLowerCase()+' yet'); setTimeout(refreshTurn,1100); return; }
+    S.powerMode=pw.type; S.yankFrom=-1;
+    if(pw.type==='yank'){
+      markTargets(enemyMarkCells().filter(function(i){ return adjacentEmpties(i).length; }));
+      setPrompt(pw.icon+' Tap a rival mark to yank');
+    } else {
+      markTargets(enemyMarkCells());
+      setPrompt(pw.icon+' Tap a rival mark to '+(pw.type==='smash'?'SMASH':'befriend'));
+    }
+    updatePowerUI(); vibrate(12);
+  }
+  function cancelPower(){ S.powerMode=null; S.yankFrom=-1; clearTargets(); updatePowerUI(); refreshTurn(); }
+
+  function handlePowerTap(i){
+    var cur=S.turn, enemy=otherP(cur), pw=POWERS[S.theme];
+    if(S.powerMode==='smash'){
+      if(S.B[i]!==enemy) return;
+      smashAt(i); markPowerUsed(cur); endPowerTurn(cur);
+    } else if(S.powerMode==='convert'){
+      if(S.B[i]!==enemy) return;
+      var won=convertAt(i,cur); markPowerUsed(cur);
+      if(won) return; endPowerTurn(cur);
+    } else if(S.powerMode==='yank'){
+      if(S.yankFrom<0){
+        if(S.B[i]!==enemy) return;
+        if(!adjacentEmpties(i).length) return;
+        S.yankFrom=i; markTargets(adjacentEmpties(i));
+        setPrompt(pw.icon+' Sling it to a glowing cell');
+      } else {
+        if(adjacentEmpties(S.yankFrom).indexOf(i)<0) return;
+        var wonY=yankMove(S.yankFrom,i); markPowerUsed(cur);
+        if(wonY) return; endPowerTurn(cur);
+      }
+    }
+  }
+  function markPowerUsed(cur){
+    S.powerAvail[cur]=false; S.powerMode=null; S.yankFrom=-1;
+    clearTargets(); S.moves=[];   // powers break the simple undo history
+    updatePowerUI();
+  }
+  function endPowerTurn(cur){ if(S.over) return; S.placesLeft=1; S.turn=otherP(cur); refreshTurn(); }
+
+  function smashAt(i){
+    var cell=$('board').children[i];
+    if(cell){ cell.classList.add('smashing'); (function(c){ setTimeout(function(){ c.innerHTML=''; c.classList.remove('smashing','pop','win'); }, 260); })(cell); }
+    S.B[i]=0; tone(150,0.2,'sawtooth',0.14); vibrate([25,30,25]); burstAt(i,'💥');
+  }
+  function convertAt(i,cur){
+    S.B[i]=cur;
+    var cell=$('board').children[i];
+    if(cell){ cell.innerHTML=markHTML(cur); cell.classList.remove('win'); cell.classList.add('pop'); }
+    tone(680,0.16,'sine',0.14); vibrate(18); burstAt(i, S.theme==='kawaii'?'💗':'✨');
+    var line=winLine(i);
+    if(line){ endGame(cur,line); return true; }
+    return false;
+  }
+  function yankMove(from,to){
+    var enemy=S.B[from];
+    S.B[to]=enemy; S.B[from]=0;
+    var cf=$('board').children[from], ct=$('board').children[to];
+    if(cf){ cf.innerHTML=''; cf.classList.remove('win','pop'); }
+    if(ct){ ct.innerHTML=markHTML(enemy); ct.classList.add('pop'); }
+    tone(300,0.14,'square',0.12); vibrate(16); burstAt(to,'🕸');
+    var line=winLine(to);
+    if(line){ endGame(enemy,line); return true; }   // yanker's risk: could complete rival's line
+    return false;
+  }
+  function burstAt(i,emoji){
+    var cell=$('board').children[i]; if(!cell) return;
+    var s=document.createElement('div'); s.className='cellburst'; s.textContent=emoji;
+    cell.appendChild(s); setTimeout(function(){ s.remove(); }, 600);
+  }
+  function updatePowerUI(){
+    var pw=POWERS[S.theme], cur=S.turn, btn=$('powerBtn');
+    if(!S.powersOn || !pw){ if(btn) btn.style.display='none'; setPip(1,true,true); setPip(2,true,true); return; }
+    if(btn){
+      btn.style.display='';
+      var arming=!!S.powerMode;
+      var ready=S.powerAvail[cur] && !S.over && !arming;
+      btn.innerHTML=(arming?'✖ ':pw.icon+' ')+'<span>'+(arming?'Cancel':pw.name)+'</span>';
+      btn.classList.toggle('ready', ready);
+      btn.classList.toggle('arming', arming);
+      btn.classList.toggle('used', !ready && !arming);
+    }
+    setPip(1, S.powerAvail[1], false);
+    setPip(2, S.powerAvail[2], false);
+  }
+  function setPip(p, avail, hide){
+    var el=$('ppip'+p); if(!el) return;
+    if(hide){ el.style.display='none'; return; }
+    el.style.display='';
+    el.textContent = POWERS[S.theme] ? POWERS[S.theme].icon : '';
+    el.classList.toggle('used', !avail);
   }
 
   function inb(r,c){ return r>=0&&c>=0&&r<S.size&&c<S.size; }
@@ -1085,6 +1271,7 @@
     $('pcard1').classList.toggle('turn', S.turn===1);
     $('pcard2').classList.toggle('turn', S.turn===2);
     $('turnLine').textContent = playerName(S.turn)+"'s turn";
+    updatePowerUI();
   }
   function updateScore(){
     $('score1').textContent=S.scores.p1;
@@ -1156,6 +1343,8 @@
   function restart(keepScores){
     S.B=new Array(S.size*S.size).fill(0);
     S.turn=1; S.moves=[]; S.over=false;
+    S.powerAvail={1:true,2:true}; S.placesLeft=1; S.powerMode=null; S.yankFrom=-1;
+    clearTargets();
     $('overlay').classList.remove('active');
     buildBoard(); refreshTurn();
     blip(2);
@@ -1239,15 +1428,17 @@
     $('againBtn').addEventListener('click', function(){ restart(true); });
     $('restartBtn').addEventListener('click', function(){ restart(true); });
     $('undoBtn').addEventListener('click', undoSafe);
+    $('powerBtn').addEventListener('click', activatePower);
     $('soundBtn').addEventListener('click', function(){
       S.sound=!S.sound; $('soundBtn').textContent=S.sound?'🔊':'🔇'; savePrefs(); if(S.sound) blip(1);
     });
     $('themeBtn').addEventListener('click', function(){
+      if(S.powerMode) cancelPower();
       var order=['neon','kawaii','hero','web'];
       S.theme = order[(order.indexOf(S.theme)+1)%order.length];
       applyTheme(); savePrefs();
       // re-render existing marks in new style
-      renderPlayers(); updateDots();
+      renderPlayers(); updateDots(); updatePowerUI();
       for(var i=0;i<S.B.length;i++){ var c=$('board').children[i]; if(c && S.B[i]) c.innerHTML=markHTML(S.B[i]); }
       blip(2);
     });
@@ -1255,7 +1446,9 @@
 
   // A robust undo that correctly reverses scores when a finished game is undone
   function undoSafe(){
+    if(S.powerMode){ cancelPower(); return; }   // first Undo just cancels power targeting
     if(!S.moves.length && !S.over) return;
+    S.placesLeft=1;
     var wasOver=S.over;
     var lastIdx=S.moves.length?S.moves[S.moves.length-1]:-1;
     if(lastIdx<0) return;
