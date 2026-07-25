@@ -51,6 +51,7 @@
     border:1px solid var(--brd); border-radius:999px; padding:7px 14px; color:var(--muted);
     background:rgba(10,12,25,.6);
   }
+  .badge.warn{ color:#ffb46b; border-color:#7a4a1e; background:rgba(60,30,8,.55); }
 
   /* ---------- panels ---------- */
   .panel{
@@ -180,6 +181,7 @@
       <button class="primary" id="btnPlay">▶ Play Fanfare</button>
       <button class="ghost" id="btnStop">■ Stop</button>
       <button class="ghost" id="btnLoop" aria-pressed="false">↻ Loop</button>
+      <button class="ghost" id="btnTest">🔊 Test Tone</button>
       <div class="clock" id="clock">1 . 1</div>
       <div class="spacer"></div>
       <div class="field">
@@ -317,7 +319,7 @@ function makeDriveCurve(amount){
 }
 
 function initAudio(){
-  if(ctx) { if(ctx.state === 'suspended') ctx.resume(); return ctx; }
+  if(ctx){ unlockAudio(); return ctx; }
   var AC = window.AudioContext || window.webkitAudioContext;
   if(!AC){ setMsg('This browser has no Web Audio support.', true); return null; }
   ctx = new AC();
@@ -354,12 +356,36 @@ function initAudio(){
   noiseBuf = makeNoiseBuffer(ctx);
 
   applyAllParams();
-  setEngineState('running');
+  unlockAudio();
   return ctx;
 }
 
-function setEngineState(s){
-  document.getElementById('engineState').textContent = 'Audio: ' + s;
+/* Mobile browsers hand back a SUSPENDED context and only resume it inside a real
+   user gesture. Safari additionally wants a buffer to have actually run through
+   the graph before it will let anything be heard, hence the 1-frame silent blip. */
+function unlockAudio(){
+  if(!ctx) return;
+  if(ctx.state !== 'running' && ctx.resume){
+    var p = ctx.resume();
+    if(p && p.then) p.then(refreshEngineState, refreshEngineState);
+  }
+  try{
+    var s = ctx.createBufferSource();
+    s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    s.connect(ctx.destination);
+    s.start(0);
+  }catch(e){}
+  refreshEngineState();
+}
+
+var lastEngineState = '';
+function refreshEngineState(){
+  var st = ctx ? ctx.state : 'idle';
+  if(st === lastEngineState) return;
+  lastEngineState = st;
+  var el = document.getElementById('engineState');
+  el.textContent = 'Audio: ' + st;
+  el.classList.toggle('warn', st !== 'running');
 }
 
 /* ---------------------------------------------------------------
@@ -794,6 +820,24 @@ function scheduler(){
 function play(){
   if(!initAudio()) return;
   if(playing) return;
+  // A suspended context has a frozen currentTime — anchoring the transport to it
+  // would schedule the whole score into the past. Wait for the resume first.
+  if(ctx.state !== 'running' && ctx.resume){
+    var p = ctx.resume();
+    if(p && p.then){ p.then(startTransport, audioBlocked); return; }
+  }
+  startTransport();
+}
+
+function audioBlocked(){
+  refreshEngineState();
+  setMsg('Audio is still asleep — tap Play once more. On iPhone, also check the silent/ring switch: Safari mutes synthesised audio whenever the phone is on silent.', true);
+}
+
+function startTransport(){
+  if(!ctx || playing) return;
+  if(ctx.state !== 'running'){ audioBlocked(); return; }
+  refreshEngineState();
   buildEvents();
   playing = true;
   anchorBeat = (cursorBeat >= totalBeats - 0.01) ? 0 : cursorBeat;
@@ -933,6 +977,7 @@ function drawScope(){
 
 function frame(){
   drawRoll(); drawScope();
+  refreshEngineState();          // the context can change state on its own
   var b = playing ? beatNow() : cursorBeat;
   var bar = Math.floor(b / 4) + 1, beat = Math.floor(b % 4) + 1;
   document.getElementById('clock').textContent = bar + ' . ' + beat;
@@ -978,6 +1023,29 @@ $('btnLoop').addEventListener('click', function(){
   looping = !looping;
   this.setAttribute('aria-pressed', looping ? 'true' : 'false');
 });
+$('btnTest').addEventListener('click', function(){
+  if(!initAudio()) return;
+  unlockAudio();
+  var fire = function(){
+    var v = makeVoice('brass', 69, ctx.currentTime + 0.03, 1);   // A4 = 440 Hz
+    v.stop(ctx.currentTime + 0.75);
+    setMsg(ctx.state === 'running'
+      ? 'Sent a 440 Hz tone. Hear nothing? The synth is fine — it is the device: check the volume rocker while the page is open, and on iPhone the silent switch.'
+      : 'Audio context is "' + ctx.state + '". Tap Test Tone once more.', ctx.state !== 'running');
+  };
+  if(ctx.state !== 'running' && ctx.resume){
+    var p = ctx.resume();
+    if(p && p.then){ p.then(fire, audioBlocked); return; }
+  }
+  fire();
+});
+
+/* Create the context on the very first gesture anywhere — the most reliable
+   moment for a mobile browser to grant audio. */
+['pointerdown','touchend','keydown'].forEach(function(evt){
+  window.addEventListener(evt, function(){ initAudio(); }, { once:true, passive:true });
+});
+
 $('btnPanic').addEventListener('click', function(){
   stop();
   Object.keys(liveVoices).forEach(function(k){ liveVoices[k].stop(ctx.currentTime); delete liveVoices[k]; });
